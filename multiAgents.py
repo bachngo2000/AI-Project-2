@@ -52,10 +52,6 @@ class ReflexAgent(Agent):
 
         return legalMoves[chosenIndex]
 
-    # take: current game state and a leagl saction at that state
-    # return: the value of that state as a linear function of current score, distance to the closest dot,
-    # the distance to the closest ghost, and whether ghost is scared or not
-
     def evaluationFunction(self, currentGameState, action):
         """
         Design a better evaluation function here.
@@ -74,33 +70,30 @@ class ReflexAgent(Agent):
         # Useful information you can extract from a GameState (pacman.py)
         successorGameState = currentGameState.generatePacmanSuccessor(action)
         newPos = successorGameState.getPacmanPosition()
-        print("newPos {}".format(newPos))
         newFood = successorGameState.getFood()
-        print("newFood {}".format(newFood))
         newGhostStates = successorGameState.getGhostStates()
-        print("newGhostStates {}".format(newGhostStates))
-        print(newGhostStates[0].getPosition())
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
-        print("newScaredTimes {}".format(newScaredTimes))
 
         "*** YOUR CODE HERE ***"
+        newFoodList = newFood.asList()
+        newFoodSize = len(newFoodList) # number of remaining foods to eat in the proposed successor game state #
+        NumFoodToEat = currentGameState.getFood().count() # number of foods in the current game state #
 
-        # Eval(s) = w1.f1(s) + w2.f2(s) + w3.f3(s) + w4.f4(s)
-        # f1(s) = the current score
-        f1 = successorGameState.getScore()
+        if NumFoodToEat == newFoodSize:
+            distance = 10000
+            for pellet in newFoodList:
+                # if the Manhattan distance between a single pellet and the Pacman position after moving is less than
+                # the distance, update the distance with the Manhattan distance's value
+                if manhattanDistance(pellet, newPos) < distance:
+                    distance = manhattanDistance(pellet, newPos)
+        else:
+            distance = 0
 
-        # f2(s) = the distance to the closest food (Manhattan Distance)
-
-        f2 = newPos[0]
-
-        # f3(3) = the distance to the closest ghost
-
-        # f4(s) = whether ghost is scared or not
-
-
-
-        return successorGameState.getScore()
-
+        for ghost in newGhostStates:
+            # Manhattan distance between the current position of a ghost and the Pacman position after moving
+            mhd = manhattanDistance(ghost.getPosition(), newPos)
+            distance = ((4 ** 3) / (4 ** mhd)) + distance
+        return -abs(distance)
 def scoreEvaluationFunction(currentGameState):
     """
     This default evaluation function just returns the score of the state.
@@ -131,7 +124,6 @@ class MultiAgentSearchAgent(Agent):
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
 
-
 class MinimaxAgent(MultiAgentSearchAgent):
     """
     Your minimax agent (question 2)
@@ -161,7 +153,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        curr_depth = 0   # initialize it to zero for root
+        curr_depth = 0  # initialize it to zero for root
         max_depth = self.depth
         curr_agent = self.index
         value = self.minimax_helper(gameState, curr_agent, curr_depth, max_depth)[0]
@@ -208,7 +200,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             # finding whose turn is to make the next move in the successor state
             next_agent = curr_agent + 1
             # if next agent index is beyond the last ghost index
-            if next_agent == gameState.getNumAgents():   # number of agents is one more that the last ghost index
+            if next_agent == gameState.getNumAgents():  # number of agents is one more that the last ghost index
                 # make the pacman the next agent
                 next_agent = 0
                 # increase the depth of the tree
@@ -234,6 +226,10 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
+        """
+                Returns the minimax action using self.depth and self.evaluationFunction
+                """
+        "*** YOUR CODE HERE ***"
         curr_depth = 0  # initialize it to zero for root
         max_depth = self.depth
         curr_agent = self.index
@@ -246,8 +242,9 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
         # calling a function within the same class
 
-    # take
-    # return
+        # take
+        # return
+
     def alphabeta_helper(self, gameState, curr_agent, curr_depth, max_depth, alpha, beta):
         # base case:  when game is over or when the game tree reaches its max depth
         if gameState.getLegalActions(curr_agent) == [] or curr_depth == max_depth:
@@ -327,6 +324,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
+        "*** YOUR CODE HERE ***"
         curr_depth = 0  # initialize it to zero for root
         max_depth = self.depth
         curr_agent = self.index
@@ -335,7 +333,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         action = self.expectimax_helper(gameState, curr_agent, curr_depth, max_depth)[1]
         return action
 
-    # calling a function within the same class
+        # calling a function within the same class
+
     def expectimax_helper(self, gameState, curr_agent, curr_depth, max_depth):
         # base case:  when game is over or when the game tree reaches its max depth
         if gameState.getLegalActions(curr_agent) == [] or curr_depth == max_depth:
@@ -401,7 +400,93 @@ def betterEvaluationFunction(currentGameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    # variable declarations #
+    evalVal = 0  # Evaluation value set to 0 initially
+    foodList = currentGameState.getFood().asList()  # list of all remaining foods in the current state
+    foodNum = len(foodList)  # number of foods remaining in the current state
+    position = currentGameState.getPacmanPosition()  # current position of Pacman in the current state
+    capsules = len(currentGameState.getCapsules())  # number of capsules (big white dots)
+    blueGhostsList = []  # List of blue ghosts that Pacman can eat for extra points
+    activeGhostsList = []  # List of  active ghosts that can eat Pacman
+    score = currentGameState.getScore()  # current score
+    scoreWeight = 1.5
+    foodWeight = -5
+    capsulesWeight = -30
+
+    evalVal = evalVal + (scoreWeight * score)
+
+    # 5 points will be rewarded to Pacman every time it eats a pellet/food. Every time that happens, our evaluation
+    # value gets better in the proposed successor state since the remaining food is less
+    evalVal = evalVal + (foodWeight * foodNum)
+
+    # Everytime Pacman eats a ghost, it gains 30 points. Our objective is to first eat a capsule, since by doing so, we
+    # can eat a ghost. So we try to make Pacman eat capsules more frequently that pellets
+    # Weight of capsules > weight of pellets (food)
+    evalVal = evalVal + (capsulesWeight * capsules)
+
+    # finding blue ghosts and active ghosts #
+    for ghost in currentGameState.getGhostStates():
+        if ghost.scaredTimer:  # blue ghosts
+            blueGhostsList.append(ghost)
+        else:  # active ghosts
+            activeGhostsList.append(ghost)
+
+    # List of distances of the Pacman position from a food/pellet
+    food_pacman_Distances = []
+    # List of distances of the Pacman position from an active ghost
+    activeGhosts_pacman_Distances = []
+    # List of distances of the Pacman position from a blue/scared ghost
+    blueGhosts_pacman_Distances = []
+
+    # Find distances #
+    for pellet in foodList:
+        pelletDistance = manhattanDistance(position, pellet)
+        food_pacman_Distances.append(pelletDistance)
+
+    for ghost in activeGhostsList:
+        scaredGhostDistance = manhattanDistance(position, ghost.getPosition())
+        blueGhosts_pacman_Distances.append(scaredGhostDistance)
+
+    for ghost in blueGhostsList:
+        blueGhostsDistance = manhattanDistance(position, ghost.getPosition())
+        blueGhosts_pacman_Distances.append(blueGhostsDistance)
+
+    # Update evaluation value based on food distances
+    # weight of food very close to the Pacman: -1
+    # weight of food quite close to the Pacman: -0.5
+    # weight of food far away from the Pacman: -0.1
+    for distance in food_pacman_Distances:
+        if distance < 3:
+            evalVal = evalVal + (-1 * distance)
+        if distance < 6:
+            evalVal = evalVal + (-0.5 * distance)
+        else:
+            evalVal = evalVal + (-0.1 * distance)
+
+    # Update evaluation value based on active ghosts distances
+    # weight of ghost nearby: 3
+    # weight of ghost quite close by: 2
+    # weight of distant ghost: 0.5
+    for distance in activeGhosts_pacman_Distances:
+        if distance < 3:
+            evalVal = evalVal + (3 * distance)
+        elif distance < 6:
+            evalVal = evalVal + (2 * distance)
+        else:
+            evalVal = evalVal + (0.5 * distance)
+
+
+    # Update evaluation based on blue ghosts distances
+    # Close scared ghosts weight: -25
+    # Quite close scared ghosts weight: -15
+    for distance in blueGhosts_pacman_Distances:
+        if distance < 3:
+            evalVal = evalVal + (-25 * distance)
+        else:
+            evalVal = evalVal + (-15 * distance)
+
+    return evalVal
 
 # Abbreviation
 better = betterEvaluationFunction
