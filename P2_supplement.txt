@@ -1,0 +1,65 @@
+Project 2
+Our Team members: Hoda Soltani, Bach X Nguyen Ngo
+
+
+Q1.1: Please detail in 3-4 sentences your thought process on how you planned to tackle the ReflexAgent problem in your supplementary file.
+
+Answer: 
+
+
+
+--------------------------------------------------------------------
+Q2.1: Please give a short 2-3 sentence reason why Pacman always rushes the closest ghost in this case?
+
+Answer: As also stated in the question because of the constant penalty for living pacman will try to end the game as soon as possible, and that means rushing to the closest ghost instead of running away in a hopeless attempt. The reason behind it is that Pacman's goal as a maximizer is to maximize it's score as and he achieves that goal by ending a non-wining game as soon as possible. Minimax agents always assume the worst. Pacman is trapped in a corridor with one ghost on the right side and with another on the left side at the other end of the corridor. When I ran it for depth 1, it was possible for paceman to come out of the corridor, eat all the pallets and scored 531 or gets killed with score of -503. Depth 2: he also had a chance to score 532 and win or lose and get -502. However, with depth = 3, I only had loss with a score of -501. I noticed that among the lost games, depth 3 gained a higher score than depth 2, and the score of depth 2 was higher than that of depth 1. Sounds like depth 3 is doomed to lose while shallower depths had a chance to win.This could be related to the imperfect evaluation function which is just the score of the state. This is a minimax search and both ghosts and pacman are trying to score their highest possible. 
+
+---------------------------------------------------------------------
+Q3.1 Run the following command
+python pacman.py -p AlphaBetaAgent -a depth=3 -l smallClassic
+
+using depths 1, 2, 3, and 4. For each depth, give a short sentence describing how the agent played, did it win or lose, and if there were any noticeable patterns.
+
+Answer:
+Depth 1: (lost) ave. score = -245. He started very good but then stayed inside the U shape wall on the left side of the grid and lost lots of points by receiving penalties. I ran it again and this time pacman stayed put at the corner of the walls on the right side after exploring the space and eating some pellets for a short while. It was strange to see him staying in a corner for a long time until he got killed. 
+
+Depth 2: (lost) ave. score = -199. The issue of staying at the corners happened again. It seems paceman stays there until a very close ghost (based on my observation one grid distant motivates him to move again and explore the space. 
+
+Depth 3: (lost) ave. score = -30. Speed reduced significantly compared to the last cases because the depth first search has to go down 3 depth deep to propagate the scores to the root and that takes more time. He stayed at the corner and then moved towards an adjacent ghost.
+
+Depth 4: (lost) ave. score = -376. This run took a long time!
+
+
+In general, evaluation functions are always imperfect because they are estimations of terminal state values. So I was expecting as the search goes deeper, the better pacman should play. In order to make this conclusion I need to run a large number of runs and get an average for each depth. I can not only rely on the result of one single run. Deeper search gives almost same quality of play with a less accurate evaluation function which is the case here since the evaluation function only takes into account the score of each state and values a state regardless of the other important features such as the ghost distance or the food distance, or the adjacent walls. Our poor evaluation function explains why pacman gets stuck at the corners and does not move until a ghost comes nearby. The presence of an adjacent ghost changes the value of the successors of pacman's current state and that is why it moves to states with higher values. Another reason could be related to the depth in which we terminate the search. It is recommended to terminate when major changes in the future values are not expected. And I am not sure what that depth would be for this case. Anyway, using evaluation functions takes away the guarantee of optimal play is gone. 
+
+------------------------------------------------------------------------
+Q4.1 Run the AlphaBetaAgent on the following environment: 
+python pacman.py -p AlphaBetaAgent -l trappedClassic -a depth=3 -q -n 10
+
+Answer: 
+The score for all 10 runs is -501 and Paceman in AlphaBeta always loses. 
+
+
+Now run the ExpectimaxAgent on the same environment: 
+python pacman.py -p ExpectimaxAgent -l trappedClassic -a depth=3 -q -n 10
+
+Average Score: 118.4
+Scores:        532.0, 532.0, 532.0, -502.0, -502.0, 532.0, 532.0, -502.0, -502.0, 532.0
+Win Rate:      6/10 (0.60)
+Record:        Win, Win, Win, Loss, Loss, Win, Win, Loss, Loss, Win
+
+
+Now give a 2-3 sentences detailing why the results are expected between the two algorithms.
+Answer: pacman wins 6 out of 10 in Expectimax games which is a big improvement over the AlphaBeta always lose case. 
+After running alphabeta case for several times, I noticed that the game starts with the pacman trapped between two ghosts in a corridor with no way out. Since ghosts are model as optimal minimizer agents they will be moving towards the pacman trapped in the middle and that explains why pacman loses all the 10 cases. On the other hand, in expectimax the ghosts are modeled as suboptimal agents selecting actions randomly. Injecting randomness into the ghost actions and modeling pacman as a maximizer against suboptimal ghosts increased the probability of gaining better scores and wining for pacman because this time a ghost might randomly get away from pacman and let him out of the corridor.  
+
+-----------------------------------------------------------------------
+Q5.1 Please detail in 5-6 sentences your thought process on how you planned to tackle the betterEvaluationFunction problem.
+
+Answer:
+
+
+
+
+
+
+
