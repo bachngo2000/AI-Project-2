@@ -23,7 +23,6 @@ class ReflexAgent(Agent):
     """
     A reflex agent chooses an action at each choice point by examining
     its alternatives via a state evaluation function.
-
     The code below is provided as a guide.  You are welcome to change
     it in any way you see fit, so long as you don't touch our method
     headers.
@@ -33,9 +32,7 @@ class ReflexAgent(Agent):
     def getAction(self, gameState):
         """
         You do not need to change this method, but you're welcome to.
-
         getAction chooses among the best options according to the evaluation function.
-
         Just like in the previous project, getAction takes a GameState and returns
         some Directions.X for some X in the set {NORTH, SOUTH, WEST, EAST, STOP}
         """
@@ -55,15 +52,12 @@ class ReflexAgent(Agent):
     def evaluationFunction(self, currentGameState, action):
         """
         Design a better evaluation function here.
-
         The evaluation function takes in the current and proposed successor
         GameStates (pacman.py) and returns a number, where higher numbers are better.
-
         The code below extracts some useful information from the state, like the
         remaining food (newFood) and Pacman position after moving (newPos).
         newScaredTimes holds the number of moves that each ghost will remain
         scared because of Pacman having eaten a power pellet.
-
         Print out these variables to see what you're getting, then combine them
         to create a masterful evaluation function.
         """
@@ -94,6 +88,7 @@ class ReflexAgent(Agent):
             mhd = manhattanDistance(ghost.getPosition(), newPos)
             distance = ((4 ** 3) / (4 ** mhd)) + distance
         return -abs(distance)
+
 def scoreEvaluationFunction(currentGameState):
     """
     This default evaluation function just returns the score of the state.
@@ -124,11 +119,14 @@ class MultiAgentSearchAgent(Agent):
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
 
+
 class MinimaxAgent(MultiAgentSearchAgent):
     """
     Your minimax agent (question 2)
     """
-
+    # take a gamState
+    # return the minimax action from the passed gameState
+    # assume the value of each state is simply the score at that state
     def getAction(self, gameState):
         """
         Returns the minimax action from the current gameState using self.depth
@@ -152,32 +150,39 @@ class MinimaxAgent(MultiAgentSearchAgent):
         gameState.isLose():
         Returns whether or not the game state is a losing state
         """
-        "*** YOUR CODE HERE ***"
-        curr_depth = 0  # initialize it to zero for root
+        # initialize the search depth to zero for root
+        curr_depth = 0
+        # acquire the maximum search depth from user input
         max_depth = self.depth
+        # get the index of the current agent (it is his turn to play)
         curr_agent = self.index
+        # call the recursive minimax_helper function to obtain the value of the root and it's action
         value = self.minimax_helper(gameState, curr_agent, curr_depth, max_depth)[0]
         print("minimax value is {0}".format(value))
         action = self.minimax_helper(gameState, curr_agent, curr_depth, max_depth)[1]
         return action
 
-    # calling a function within the same class
+    # minimax_helper is a recursive function
+    # take a game state, the agent index whose turn is up to play, current depth of search, and max search depth
+    # return the value of root of the minimax search as well as its associated action at root as a tuple
     def minimax_helper(self, gameState, curr_agent, curr_depth, max_depth):
-        # base case:  when game is over or when the game tree reaches its max depth
+        # base case:  when game is over or when the reaches to the max depth
         if gameState.getLegalActions(curr_agent) == [] or curr_depth == max_depth:
+            # setting the value of the state as the score of that state
             val = self.evaluationFunction(gameState)
+            # return the value of the state and set action to none since to legal action is availabe at terminal states
             return val, None
 
         # recursive case 1:
-        # when it is pacman's turn the maximizer
+        # when it is pacman's turn (the maximizer)
         if curr_agent == 0:
-            # pacman maximizer tries to update val to a max. possible value, so it is initialized to a very small number
+            # pacman maximizer tries to update val to the max. possible value, so it is initialized to a very small number
             val = -100000000000.0
 
             # obtain the list of possible actions for the current agent to its successors
             legal_actions = gameState.getLegalActions(0)  # agent index for pacman is zero
 
-            # finding whose turn is to make the next move in the successor state
+            # find whose turn  it is to make the next move in the successor state
             next_agent = curr_agent + 1
 
             # find the max among all the successors
@@ -186,21 +191,22 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 if val < self.minimax_helper(successor, next_agent, curr_depth, max_depth)[0]:
                     # update max value
                     val = self.minimax_helper(successor, next_agent, curr_depth, max_depth)[0]
+                    # store the associated action in action_to_max
                     action_to_max = action
 
             return val, action_to_max
 
         else:  # curr_agent > 0: when it is a ghost turn
-            # ghost minimizer tries to update val to a min. possible value, so it is initialized to a very large number
+            # ghost minimizer tries to update val to the min. possible value, so it is initialized to a very large number
             val = +100000000000.0
 
             # obtain the list of possible actions for the current agent to its successors
             legal_actions = gameState.getLegalActions(curr_agent)  # agent index for ghosts > 0
 
-            # finding whose turn is to make the next move in the successor state
+            # find whose turn it is to make the next move in the successor state
             next_agent = curr_agent + 1
-            # if next agent index is beyond the last ghost index
-            if next_agent == gameState.getNumAgents():  # number of agents is one more that the last ghost index
+            # if next agent index is beyond the last ghost index meaning the last ghost played his move
+            if next_agent == gameState.getNumAgents():   # number of agents is one more than the last ghost index
                 # make the pacman the next agent
                 next_agent = 0
                 # increase the depth of the tree
@@ -212,6 +218,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 if val > self.minimax_helper(successor, next_agent, curr_depth, max_depth)[0]:
                     # update min value
                     val = self.minimax_helper(successor, next_agent, curr_depth, max_depth)[0]
+                    # store the associated action in action_to_min
                     action_to_min = action
 
             return val, action_to_min
@@ -221,30 +228,32 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     Your minimax agent with alpha-beta pruning (question 3)
     """
 
+    # take a gamState
+    # return the minimax action from the passed gameState using pruning
+    # assume the value of each state is simply the score at that state
     def getAction(self, gameState):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
-        """
-                Returns the minimax action using self.depth and self.evaluationFunction
-                """
-        "*** YOUR CODE HERE ***"
-        curr_depth = 0  # initialize it to zero for root
+        # initialize the search depth to zero for root
+        curr_depth = 0
+        # acquire the maximum search depth from user input
         max_depth = self.depth
+        # get the index of the current agent (it is his turn to play)
         curr_agent = self.index
+        # initialize alpha or the maximizer score to a very small number. Maximizer updates alpha to greater values while playing the game
         alpha = -100000000000.0
+        # initialize beta or the minimizer score to a very large number. Minimizer updates beta to smaller values while playing the game
         beta = 100000000000.0
+        # call the recursive alphabeta_helper function to obtain the value of the root and it's action
         value = self.alphabeta_helper(gameState, curr_agent, curr_depth, max_depth, alpha, beta)[0]
         print("alphabeta value is {0}".format(value))
         action = self.alphabeta_helper(gameState, curr_agent, curr_depth, max_depth, alpha, beta)[1]
         return action
 
-        # calling a function within the same class
-
-        # take
-        # return
-
+    # alphabeta_helper is a recursive function
+    # take a game state, the agent index whose turn is up to play, current depth of search, max search depth, maximizer best score=alpha, and minimizer best score= beta
+    # return the value of root of the alphabeta search as well as its associated action at root as a tuple
     def alphabeta_helper(self, gameState, curr_agent, curr_depth, max_depth, alpha, beta):
         # base case:  when game is over or when the game tree reaches its max depth
         if gameState.getLegalActions(curr_agent) == [] or curr_depth == max_depth:
@@ -286,7 +295,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             # obtain the list of possible actions for the current agent to its successors
             legal_actions = gameState.getLegalActions(curr_agent)  # agent index for ghosts > 0
 
-            # finding whose turn is to make the next move in the successor state
+            # find whose turn it is to make the next move in the successor state
             next_agent = curr_agent + 1
             # if next agent index is beyond the last ghost index
             if next_agent == gameState.getNumAgents():  # number of agents is one more that the last ghost index
@@ -295,12 +304,13 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 # increase the depth of the tree
                 curr_depth += 1
 
-            # find the min among all the successors
+            # find the min value among all the successors
             for action in legal_actions:
                 successor = gameState.generateSuccessor(curr_agent, action)
                 if val > self.alphabeta_helper(successor, next_agent, curr_depth, max_depth, alpha, beta)[0]:
                     # update min value
                     val = self.alphabeta_helper(successor, next_agent, curr_depth, max_depth, alpha, beta)[0]
+                    # store the associated action
                     action_to_min = action
 
                 # compare value to the stored alpha i.e. the best possible outcome so far of the maximizer
@@ -316,7 +326,9 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 4)
     """
-
+    # take game state
+    # return the expectimax action
+    # assumes that pacman is a maximizer agent and ghosts take actions randomly
     def getAction(self, gameState):
         """
         Returns the expectimax action using self.depth and self.evaluationFunction
@@ -324,17 +336,22 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        curr_depth = 0  # initialize it to zero for root
+        # initialize it to zero for root
+        curr_depth = 0
+        # acquire the maximum search depth from user input
         max_depth = self.depth
+        # get the index of the current agent (it is his turn to play)
         curr_agent = self.index
+
         value = self.expectimax_helper(gameState, curr_agent, curr_depth, max_depth)[0]
         print("expectimax value is {0}".format(value))
         action = self.expectimax_helper(gameState, curr_agent, curr_depth, max_depth)[1]
         return action
 
-        # calling a function within the same class
-
+    # expectimax_helper is a recursive function
+    # take a game state, the agent index whose turn is up to play, current depth of search, and max search depth
+    # return the value of root of the expectimax search tree as well as its associated action at root as a tuple
+    # assume all ghost's legal actions have the same probability
     def expectimax_helper(self, gameState, curr_agent, curr_depth, max_depth):
         # base case:  when game is over or when the game tree reaches its max depth
         if gameState.getLegalActions(curr_agent) == [] or curr_depth == max_depth:
@@ -365,7 +382,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
         else:  # curr_agent > 0: when it is a ghost turn
             # ghost is a random agent.
-            # All ghosts are modeled as choosing uniformly at random from their legal moves.
+            # All ghosts are modeled so that they choose uniformly at random from their legal moves.
+            # initialize the value to zero
             val = 0
 
             # obtain the list of possible actions for the current agent to its successors
@@ -380,8 +398,9 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                 # increase the depth of the tree
                 curr_depth += 1
 
-            # find average value among all the successors
+            # find average value among all the successors by looping through the legal actions to the successors
             for action in legal_actions:
+                # get the successor
                 successor = gameState.generateSuccessor(curr_agent, action)
                 # calculate the sum of values over the successors
                 val = val + self.expectimax_helper(successor, next_agent, curr_depth, max_depth)[0]
@@ -390,13 +409,13 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
             # all legal actions have equal probability of being selected
             action_expectimax = random.choice(legal_actions)
+
             return val, action_expectimax
 
 def betterEvaluationFunction(currentGameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
-
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
